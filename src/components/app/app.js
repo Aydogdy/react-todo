@@ -19,7 +19,8 @@ export default class App extends Component {
             this.createToDoItem('Make Awesome App'),
             this.createToDoItem('Have a lunch')
         ],
-        searchQuery: ''
+        searchQuery: '',
+        filterName: 'all' // all, done
     };
 
     createToDoItem(label) {
@@ -89,37 +90,58 @@ export default class App extends Component {
         })
     }
 
-    search = (items, searchQuery) => {
+    searchItems = (items, searchQuery) => {
 
         if (searchQuery.trim() === '') {
             return items;
         }
 
         return items.filter(item => {
-            return item.label.toLowerCase().indexOf(searchQuery) > -1;
+            return item.label.toLowerCase()
+                        .indexOf(searchQuery.toLowerCase()) > -1;
         });
+    }
+
+    filterItems = (items, filterName) => {
+       
+        switch (filterName) {
+            case 'all':
+                return items;
+            case 'active':
+                return items.filter(item => (!item.done));
+            case 'done':
+                return items.filter(item => item.done);
+            default:
+                return items;
+        }
+       
     }
 
     onSearchQueryChange = (searchQuery) => {
         this.setState({ searchQuery });
     }
 
+    onFilterChange = (filterName) => {
+        this.setState({ filterName })
+    }
+
     render() {
 
-        const { todoData, searchQuery } = this.state;
+        const { todoData, searchQuery, filterName } = this.state;
 
         const doneCount = todoData
                               .filter((el) => el.done).length;
         const todoCount = todoData.length - doneCount;
 
-        const visibleItems = this.search(todoData, searchQuery);
+        const visibleItems = this.searchItems(this.filterItems(todoData, filterName), searchQuery);
 
         return (
             <div className="todo-app">
               <AppHeader toDo={ todoCount } done={ doneCount } />
               <div className="top-panel d-flex">
                 <SearchPanel onSearchQueryChange={this.onSearchQueryChange}/>
-                <ItemStatusFilter />
+                <ItemStatusFilter filter={filterName}
+                                onFilterChange={this.onFilterChange}/>
               </div>
         
               <TodoList todos={visibleItems}
